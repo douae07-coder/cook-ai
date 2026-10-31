@@ -25,7 +25,6 @@ ingredients_text = st.text_input(
 )
 
 # Initialisation du client GenAI avec ta clé API
-# ✅ La bonne pratique :
 client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 if st.button("Trouver des recettes de chef 🍽️"):
@@ -34,43 +33,50 @@ if st.button("Trouver des recettes de chef 🍽️"):
         with st.spinner(
             "CookAi analyse les ingrédients et mijote de superbes idées..."
         ):
+            try:
+                contents = []
+                pil_image = None
 
-            contents = []
-            pil_image = None
+                # Récupération de l'image selon la source (Upload ou Caméra) et conversion avec PIL
+                if uploaded_file is not None:
+                    pil_image = Image.open(uploaded_file)
+                elif camera_image is not None:
+                    pil_image = Image.open(camera_image)
 
-            # Récupération de l'image selon la source (Upload ou Caméra) et conversion avec PIL
-            if uploaded_file is not None:
-                pil_image = Image.open(uploaded_file)
-            elif camera_image is not None:
-                pil_image = Image.open(camera_image)
+                # Si on a une image, on l'ajoute proprement avec le texte
+                if pil_image is not None:
+                    prompt_text = (
+                        "Regarde cette photo de mes ingrédients. Agis comme un"
+                        " chef cuisinier créatif. Propose 2 ou 3 recettes simples"
+                        " et délicieuses avec ce que tu vois. Donne un nom"
+                        " sympa, la liste des ingrédients et les étapes de"
+                        " préparation rapides."
+                    )
+                    contents = [pil_image, prompt_text]
+                else:
+                    # Si on a seulement du texte
+                    contents = (
+                        f"Agis comme un chef cuisinier créatif et pragmatique. À"
+                        f" partir de ces ingrédients : {ingredients_text},"
+                        " propose 2 ou 3 recettes simples et délicieuses. Donne"
+                        " un nom sympa, la liste des ingrédients et les étapes"
+                        " de préparation rapides."
+                    )
 
-            # Si on a une image, on l'ajoute proprement avec le texte
-            if pil_image is not None:
-                contents.append(pil_image)
-                prompt_text = (
-                    "Regarde cette photo de mes ingrédients. Agis comme un chef"
-                    " cuisinier créatif. Propose 2 ou 3 recettes simples et délicieuses"
-                    " avec ce que tu vois. Donne un nom sympa, la liste des"
-                    " ingrédients et les étapes de préparation rapides."
+                # Appel à l'API Gemini avec un modèle flash stable et supporté
+                response = client.models.generate_content(
+                    model="gemini-2.5-flash", contents=contents
                 )
-                contents.append(prompt_text)
-            else:
-                # Si on a seulement du texte
-                contents = (
-                    f"Agis comme un chef cuisinier créatif et pragmatique. À partir de"
-                    f" ces ingrédients : {ingredients_text}, propose 2 ou 3 recettes"
-                    " simples et délicieuses. Donne un nom sympa, la liste des"
-                    " ingrédients et les étapes de préparation rapides."
+
+                # Affichage du résultat
+                st.success("Voici tes idées de recettes personnalisées !")
+                st.markdown(response.text)
+
+            except Exception as e:
+                st.error(
+                    "Une erreur est survenue lors de la communication avec"
+                    f" l'API Gemini :\n`{e}`"
                 )
-
-            # Appel à l'API Gemini avec le modèle multimodal
-            response = client.models.generate_content(
-                model="gemini-2.5-flash", contents=contents
-            )
-
-            # Affichage du résultat
-            st.success("Voici tes idées de recettes personnalisées !")
-            st.markdown(response.text)
     else:
         st.warning(
             "Oups ! Importe une photo, prends-en une ou écris quelques"
