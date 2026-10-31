@@ -65,8 +65,7 @@ if st.button("Trouver des recettes de chef 🍽️"):
 
             # Appel à l'API Gemini avec le modèle multimodal
             response = client.models.generate_content(
-                model="gemini-3.8-flash",
-                contents=contents,
+                model="gemini-2.5-flash", contents=contents
             )
 
             # Affichage du résultat
