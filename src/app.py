@@ -63,9 +63,9 @@ if st.button("Trouver des recettes de chef 🍽️"):
                         " de préparation rapides."
                     )
 
-                # Appel à l'API Gemini avec un modèle flash stable et supporté
+                # Appel à l'API Gemini avec le modèle recommandé par l'erreur (gemini-3.8-flash)
                 response = client.models.generate_content(
-                    model="gemini-2.5-flash", contents=contents
+                    model="gemini-3.8-flash", contents=contents
                 )
 
                 # Affichage du résultat
